@@ -1,0 +1,60 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+model User {
+  id         Int           @id @default(autoincrement())
+  email      String        @unique
+  name       String
+  tel        String?       // เบอร์โทรศัพท์ (เว้นว่างได้ หรือระบุเป็น String เช่น 081-234-5678)
+  role       Role          @default(USER) // บทบาทผู้ใช้ (USER หรือ ADMIN)
+  watchlists Watchlist[]   // รายการภาพยนตร์ที่บันทึกไว้ดู
+  reviews    MovieReview[] // ความสัมพันธ์ 1:N ผู้ใช้ 1 คนเขียนรีวิวหนังได้หลายเรื่อง
+  createdAt  DateTime      @default(now())
+}
+
+model Movie {
+  id          Int           @id @default(autoincrement())
+  title       String
+  director    String
+  genre       String        // เช่น Sci-Fi, Action, Drama, Animation
+  releaseYear Int
+  durationMin Int           @default(120)
+  synopsis    String?
+  posterUrl   String?
+  watchlists  Watchlist[]
+  reviews     MovieReview[]
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+}
+
+model Watchlist {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  movieId   Int
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  movie     Movie    @relation(fields: [movieId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([userId, movieId])
+}
+
+model MovieReview {
+  id        Int      @id @default(autoincrement())
+  rating    Int      // คะแนน 1 - 10
+  comment   String
+  userId    Int
+  movieId   Int
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  movie     Movie    @relation(fields: [movieId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+}
